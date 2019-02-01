@@ -6,6 +6,8 @@ import java.util.HashMap;
 import edu.wpi.SimplePacketComs.device.Device;
 
 public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer {
+	HashMap<Integer, ArrayList<Runnable>> timeouts = new HashMap<>();
+	HashMap<Integer, ArrayList<Runnable>> timeoutsToRemove = new HashMap<>();
 	HashMap<Integer, ArrayList<Runnable>> events = new HashMap<>();
 	HashMap<Integer, ArrayList<Runnable>> toRemove = new HashMap<>();
 
@@ -56,6 +58,20 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 			events.put(id, new ArrayList<Runnable>());
 		}
 		events.get(id).add(event);
+	}
+
+	public void removeTimeout(Integer id, Runnable event) {
+		if (timeoutsToRemove.get(id) == null) {
+			timeoutsToRemove.put(id, new ArrayList<Runnable>());
+		}
+		timeoutsToRemove.get(id).add(event);
+	}
+
+	public void addTimeout(Integer id, Runnable event) {
+		if (timeouts.get(id) == null) {
+			timeouts.put(id, new ArrayList<Runnable>());
+		}
+		timeouts.get(id).add(event);
 	}
 
 	public ArrayList<Integer> getIDs() {
@@ -317,7 +333,26 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 							isTimedOut = true;
 							return;
 						}
-
+						ArrayList<Runnable> toRem = timeoutsToRemove.get(packet.idOfCommand);
+						if (toRem != null) {
+							if (toRem.size() > 0) {
+								for (Runnable e : timeoutsToRemove.get(packet.idOfCommand)) {
+									timeouts.get(packet.idOfCommand).remove(e);
+								}
+								toRem.clear();
+							}
+							if (isTimedOut) {
+								for (Runnable e : timeouts.get(packet.idOfCommand)) {
+									if (e != null) {
+										try {
+											e.run();
+										} catch (Throwable t) {
+											t.printStackTrace(System.out);
+										}
+									}
+								}
+							}
+						}
 					} else
 						return;
 				} catch (Throwable t) {
@@ -332,25 +367,25 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 			}
 			// println "updaing "+upstream+" downstream "+downstream
-
-			if (events.get(packet.idOfCommand) != null) {
-				if (toRemove.get(packet.idOfCommand) != null)
-					if (toRemove.get(packet.idOfCommand).size() > 0) {
-						for (Runnable e : toRemove.get(packet.idOfCommand)) {
-							events.get(packet.idOfCommand).remove(e);
+			if (!isTimedOut)
+				if (events.get(packet.idOfCommand) != null) {
+					if (toRemove.get(packet.idOfCommand) != null)
+						if (toRemove.get(packet.idOfCommand).size() > 0) {
+							for (Runnable e : toRemove.get(packet.idOfCommand)) {
+								events.get(packet.idOfCommand).remove(e);
+							}
+							toRemove.get(packet.idOfCommand).clear();
 						}
-						toRemove.get(packet.idOfCommand).clear();
-					}
-				for (Runnable e : events.get(packet.idOfCommand)) {
-					if (e != null) {
-						try {
-							e.run();
-						} catch (Throwable t) {
-							t.printStackTrace(System.out);
+					for (Runnable e : events.get(packet.idOfCommand)) {
+						if (e != null) {
+							try {
+								e.run();
+							} catch (Throwable t) {
+								t.printStackTrace(System.out);
+							}
 						}
 					}
 				}
-			}
 		} catch (Throwable t) {
 			// t.printStackTrace(System.out);
 		}
