@@ -9,6 +9,8 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 	HashMap<Integer, ArrayList<Runnable>> timeouts = new HashMap<>();
 	HashMap<Integer, ArrayList<Runnable>> timeoutsToRemove = new HashMap<>();
 	HashMap<Integer, ArrayList<Runnable>> events = new HashMap<>();
+	HashMap<Integer, ArrayList<Runnable>> toRemove = new HashMap<>();
+
 	boolean connected = false;
 
 	ArrayList<PacketType> pollingQueue = new ArrayList<PacketType>();
@@ -45,10 +47,10 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 	}
 
 	public void removeEvent(Integer id, Runnable event) {
-		if (events.get(id) == null) {
-			events.put(id, new ArrayList<Runnable>());
+		if (toRemove.get(id) == null) {
+			toRemove.put(id, new ArrayList<Runnable>());
 		}
-		events.get(id).remove(event);
+		toRemove.get(id).add(event);
 	}
 
 	public void addEvent(Integer id, Runnable event) {
@@ -367,7 +369,13 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 			// println "updaing "+upstream+" downstream "+downstream
 			if (!isTimedOut)
 				if (events.get(packet.idOfCommand) != null) {
-
+					if (toRemove.get(packet.idOfCommand) != null)
+						if (toRemove.get(packet.idOfCommand).size() > 0) {
+							for (Runnable e : toRemove.get(packet.idOfCommand)) {
+								events.get(packet.idOfCommand).remove(e);
+							}
+							toRemove.get(packet.idOfCommand).clear();
+						}
 					for (Runnable e : events.get(packet.idOfCommand)) {
 						if (e != null) {
 							try {

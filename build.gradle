@@ -114,7 +114,7 @@ version = "0.7.0"
 artifacts {
 	archives javadocJar, sourcesJar, jar
 }
-/*
+
 signing {
 	sign configurations.archives
 }
@@ -162,4 +162,4 @@ uploadArchives {
 	  }
 	}
   }
-  */
+  
