@@ -332,19 +332,21 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 							return;
 						}
 						ArrayList<Runnable> toRem = timeoutsToRemove.get(packet.idOfCommand);
-						if (toRem.size() > 0) {
-							for (Runnable e : timeoutsToRemove.get(packet.idOfCommand)) {
-								timeouts.get(packet.idOfCommand).remove(e);
+						if (toRem != null) {
+							if (toRem.size() > 0) {
+								for (Runnable e : timeoutsToRemove.get(packet.idOfCommand)) {
+									timeouts.get(packet.idOfCommand).remove(e);
+								}
+								toRem.clear();
 							}
-							toRem.clear();
-						}
-						if (isTimedOut) {
-							for (Runnable e : timeouts.get(packet.idOfCommand)) {
-								if (e != null) {
-									try {
-										e.run();
-									} catch (Throwable t) {
-										t.printStackTrace(System.out);
+							if (isTimedOut) {
+								for (Runnable e : timeouts.get(packet.idOfCommand)) {
+									if (e != null) {
+										try {
+											e.run();
+										} catch (Throwable t) {
+											t.printStackTrace(System.out);
+										}
 									}
 								}
 							}
