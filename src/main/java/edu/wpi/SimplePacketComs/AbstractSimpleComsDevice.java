@@ -8,7 +8,7 @@ import edu.wpi.SimplePacketComs.device.Device;
 public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer {
 	HashMap<Integer, ArrayList<Runnable>> events = new HashMap<>();
 	HashMap<Integer, ArrayList<Runnable>> toRemove = new HashMap<>();
-	
+
 	boolean connected = false;
 
 	ArrayList<PacketType> pollingQueue = new ArrayList<PacketType>();
@@ -115,18 +115,20 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 						for (int i = 0; i < pt.getDownstream().length && i < values.length; i++) {
 							pt.getDownstream()[i] = (byte) values[i];
 						}
-						
+
 						return;
 					}
 			}
 	}
+
 	public void writeFloats(Integer id, Double[] values) {
-		writeFloats(id,values,true);
+		writeFloats(id, values, true);
 	}
+
 	public void writeFloats(Integer id, Double[] values, Boolean polling) {
 		if (getPacket(id) == null) {
 			FloatPacketType pt = new FloatPacketType(id, 64);
-			if(!polling)
+			if (!polling)
 				pt.oneShotMode();
 			for (int i = 0; i < pt.getDownstream().length && i < values.length; i++) {
 				pt.getDownstream()[i] = values[i].floatValue();
@@ -146,19 +148,21 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 						for (int i = 0; i < pt.getDownstream().length && i < values.length; i++) {
 							pt.getDownstream()[i] = values[i].floatValue();
 						}
-						if(!polling)
+						if (!polling)
 							pt.oneShotMode();
 						return;
 					}
 			}
 	}
+
 	public void writeBytes(Integer id, Byte[] values) {
-		writeBytes(id,values,true);
+		writeBytes(id, values, true);
 	}
+
 	public void writeBytes(Integer id, Byte[] values, Boolean polling) {
 		if (getPacket(id) == null) {
 			PacketType pt = new BytePacketType(id, 64);
-			if(!polling)
+			if (!polling)
 				pt.oneShotMode();
 			for (int i = 0; i < pt.getDownstream().length && i < values.length; i++) {
 				pt.getDownstream()[i] = values[i].byteValue();
@@ -180,7 +184,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 						for (int i = 0; i < pt.getDownstream().length && i < values.length; i++) {
 							pt.getDownstream()[i] = values[i].byteValue();
 						}
-						if(!polling)
+						if (!polling)
 							pt.oneShotMode();
 						return;
 					}
@@ -330,10 +334,13 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 			// println "updaing "+upstream+" downstream "+downstream
 
 			if (events.get(packet.idOfCommand) != null) {
-				for (Runnable e : toRemove.get(packet.idOfCommand)) {
-					 events.get(packet.idOfCommand).remove(e);
-				}
-				toRemove.get(packet.idOfCommand).clear();
+				if (toRemove.get(packet.idOfCommand) != null)
+					if (toRemove.get(packet.idOfCommand).size() > 0) {
+						for (Runnable e : toRemove.get(packet.idOfCommand)) {
+							events.get(packet.idOfCommand).remove(e);
+						}
+						toRemove.get(packet.idOfCommand).clear();
+					}
 				for (Runnable e : events.get(packet.idOfCommand)) {
 					if (e != null) {
 						try {
