@@ -342,19 +342,18 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 							}
 							toRem.clear();
 						}
-						if (isTimedOut) {
-							for (Runnable e : timeouts.get(packet.idOfCommand)) {
-								if (e != null) {
-									try {
-										e.run();
-									} catch (Throwable t) {
-										t.printStackTrace(System.out);
-									}
+					}
+					if (isTimedOut) {
+						for (Runnable e : timeouts.get(packet.idOfCommand)) {
+							if (e != null) {
+								try {
+									e.run();
+								} catch (Throwable t) {
+									t.printStackTrace(System.out);
 								}
 							}
 						}
 					}
-
 				}
 
 			} else {
