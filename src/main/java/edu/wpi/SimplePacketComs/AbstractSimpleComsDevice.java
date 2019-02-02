@@ -6,10 +6,10 @@ import java.util.HashMap;
 import edu.wpi.SimplePacketComs.device.Device;
 
 public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer {
-	HashMap<Integer, ArrayList<Runnable>> timeouts = new HashMap<>();
-	HashMap<Integer, ArrayList<Runnable>> timeoutsToRemove = new HashMap<>();
-	HashMap<Integer, ArrayList<Runnable>> events = new HashMap<>();
-	HashMap<Integer, ArrayList<Runnable>> toRemove = new HashMap<>();
+	private HashMap<Integer, ArrayList<Runnable>> timeouts = new HashMap<>();
+	private HashMap<Integer, ArrayList<Runnable>> timeoutsToRemove = new HashMap<>();
+	private HashMap<Integer, ArrayList<Runnable>> events = new HashMap<>();
+	private HashMap<Integer, ArrayList<Runnable>> toRemove = new HashMap<>();
 
 	boolean connected = false;
 
@@ -47,31 +47,23 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 	}
 
 	public void removeEvent(Integer id, Runnable event) {
-		if (toRemove.get(id) == null) {
-			toRemove.put(id, new ArrayList<Runnable>());
-		}
-		toRemove.get(id).add(event);
+
+		getToRemove(id).add(event);
 	}
 
 	public void addEvent(Integer id, Runnable event) {
-		if (events.get(id) == null) {
-			events.put(id, new ArrayList<Runnable>());
-		}
-		events.get(id).add(event);
+
+		getEvents(id).add(event);
 	}
 
 	public void removeTimeout(Integer id, Runnable event) {
-		if (timeoutsToRemove.get(id) == null) {
-			timeoutsToRemove.put(id, new ArrayList<Runnable>());
-		}
-		timeoutsToRemove.get(id).add(event);
+
+		getTimeoutsToRemove(id).add(event);
 	}
 
 	public void addTimeout(Integer id, Runnable event) {
-		if (timeouts.get(id) == null) {
-			timeouts.put(id, new ArrayList<Runnable>());
-		}
-		timeouts.get(id).add(event);
+
+		getTimeouts(id).add(event);
 	}
 
 	public ArrayList<Integer> getIDs() {
@@ -334,25 +326,26 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 							isTimedOut = true;
 						}
 					}
-					ArrayList<Runnable> toRem = timeoutsToRemove.get(packet.idOfCommand);
-					if (toRem != null) {
-						if (toRem.size() > 0) {
-							for (Runnable e : timeoutsToRemove.get(packet.idOfCommand)) {
-								timeouts.get(packet.idOfCommand).remove(e);
-							}
-							toRem.clear();
+					ArrayList<Runnable> toRem = getTimeoutsToRemove(packet.idOfCommand);
+		
+					if (toRem.size() > 0) {
+						for (Runnable e : toRem) {
+								getTimeouts(packet.idOfCommand).remove(e);
 						}
+						toRem.clear();
 					}
+					
 					if (isTimedOut) {
-						for (Runnable e : timeouts.get(packet.idOfCommand)) {
-							if (e != null) {
-								try {
-									e.run();
-								} catch (Throwable t) {
-									t.printStackTrace(System.out);
+
+							for (Runnable e : getTimeouts(packet.idOfCommand)) {
+								if (e != null) {
+									try {
+										e.run();
+									} catch (Throwable t) {
+										t.printStackTrace(System.out);
+									}
 								}
 							}
-						}
 					}
 				}
 
@@ -363,27 +356,23 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 				}
 
 			}
-			// println "updaing "+upstream+" downstream "+downstream
-
-			if (events.get(packet.idOfCommand) != null) {
-				if (toRemove.get(packet.idOfCommand) != null)
-					if (toRemove.get(packet.idOfCommand).size() > 0) {
-						for (Runnable e : toRemove.get(packet.idOfCommand)) {
-							events.get(packet.idOfCommand).remove(e);
-						}
-						toRemove.get(packet.idOfCommand).clear();
-					}
-				if (!isTimedOut)
-					for (Runnable e : events.get(packet.idOfCommand)) {
-						if (e != null) {
-							try {
-								e.run();
-							} catch (Throwable t) {
-								t.printStackTrace(System.out);
-							}
-						}
-					}
+			if (getToRemove(packet.idOfCommand).size() > 0) {
+				for (Runnable e : getToRemove(packet.idOfCommand)) {
+						getEvents(packet.idOfCommand).remove(e);
+				}
+				getToRemove(packet.idOfCommand).clear();
 			}
+			if (!isTimedOut)
+				for (Runnable e : getEvents(packet.idOfCommand)) {
+					if (e != null) {
+						try {
+							e.run();
+						} catch (Throwable t) {
+							t.printStackTrace(System.out);
+						}
+					}
+				}
+		
 		} catch (Throwable t) {
 			t.printStackTrace(System.out);
 		}
@@ -463,5 +452,33 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 	public boolean isTimedOut() {
 		return isTimedOut;
 	}
+
+	public  ArrayList<Runnable> getTimeoutsToRemove(int index) {
+		if(timeoutsToRemove.get(index)==null)
+			timeoutsToRemove.put(index,new ArrayList<Runnable> ());
+		return timeoutsToRemove.get(index);
+	}
+
+	public    ArrayList<Runnable> getToRemove(int index) {
+		if(toRemove.get(index)==null)
+			toRemove.put(index,new ArrayList<Runnable> ());
+		return toRemove.get(index);
+	}
+
+
+	public  ArrayList<Runnable> getEvents(int index) {
+		if(events.get(index)==null)
+			events.put(index,new ArrayList<Runnable> ());
+		return events.get(index);
+	}
+
+	public  ArrayList<Runnable> getTimeouts(int index) {
+		if(timeouts.get(index)==null)
+			timeouts.put(index,new ArrayList<Runnable> ());
+		return timeouts.get(index);
+	}
+
+
+
 
 }
