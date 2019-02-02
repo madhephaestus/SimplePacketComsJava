@@ -11,6 +11,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 	private HashMap<Integer, ArrayList<Runnable>> events = new HashMap<>();
 	private HashMap<Integer, ArrayList<Runnable>> toRemove = new HashMap<>();
 
+
 	boolean connected = false;
 
 	ArrayList<PacketType> pollingQueue = new ArrayList<PacketType>();
@@ -65,6 +66,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 		getTimeouts(id).add(event);
 	}
+
 
 	public ArrayList<Integer> getIDs() {
 		ArrayList<Integer> ids = new ArrayList<>();
@@ -347,6 +349,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 								}
 							}
 					}
+
 				}
 
 			} else {
@@ -369,10 +372,11 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 							e.run();
 						} catch (Throwable t) {
 							t.printStackTrace(System.out);
+
 						}
 					}
 				}
-		
+
 		} catch (Throwable t) {
 			t.printStackTrace(System.out);
 		}
