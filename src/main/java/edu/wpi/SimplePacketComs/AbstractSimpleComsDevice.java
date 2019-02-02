@@ -342,8 +342,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 								}
 							}
 						}
-						if(isTimedOut)
-							return;
+
 					} else
 						return;
 				} catch (Throwable t) {
