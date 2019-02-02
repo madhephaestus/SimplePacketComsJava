@@ -293,62 +293,70 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 		packet.started = true;
 		try {
 			if (!isVirtual()) {
-				try {
-					byte[] message = packet.command();
-					// println "Writing: "+ message
-					int val = write(message, message.length, 1);
-					if (val > 0) {
-						for (int i = 0; i < 3; i++) {// retry loop
-							int read = read(message, getReadTimeout());
-							if (read >= packet.getUpstream().length) {
-								// println "Parsing packet"
-								// println "read: "+ message
-								int ID = PacketType.getId(message);
-								if (ID == packet.idOfCommand) {
-									if (isTimedOut) {
-										System.out.println("Timout resolved " + ID);
-									}
-									isTimedOut = false;
-									Number[] up = packet.parse(message);
-									for (int j = 0; j < packet.getUpstream().length; j++) {
-										packet.getUpstream()[j] = up[j];
-									}
-									break;// pop out of the retry loop
-									// System.out.println("Took "+(System.currentTimeMillis()-start));
-								} else {
-									isTimedOut = true;
-								}
-							} else {
-								isTimedOut = true;
-							}
-						}
-						ArrayList<Runnable> toRem = timeoutsToRemove.get(packet.idOfCommand);
-						if (toRem != null) {
-							if (toRem.size() > 0) {
-								for (Runnable e : timeoutsToRemove.get(packet.idOfCommand)) {
-									timeouts.get(packet.idOfCommand).remove(e);
-								}
-								toRem.clear();
-							}
-							if (isTimedOut) {
-								for (Runnable e : timeouts.get(packet.idOfCommand)) {
-									if (e != null) {
-										try {
-											e.run();
-										} catch (Throwable t) {
-											t.printStackTrace(System.out);
-										}
-									}
-								}
-							}
-						}
 
-					} else
-						return;
+				byte[] message = packet.command();
+				// println "Writing: "+ message
+				int val = 0;
+				try {
+					val = write(message, message.length, 1);
 				} catch (Throwable t) {
 					t.printStackTrace(System.out);
 					disconnect();
 				}
+				if (val > 0) {
+					for (int i = 0; i < 3; i++) {// retry loop
+						int read = 0;
+						try {
+							read = read(message, getReadTimeout());
+						} catch (Throwable t) {
+							t.printStackTrace(System.out);
+							disconnect();
+						}
+						if (read >= packet.getUpstream().length) {
+							// println "Parsing packet"
+							// println "read: "+ message
+							int ID = PacketType.getId(message);
+							if (ID == packet.idOfCommand) {
+								if (isTimedOut) {
+									System.out.println("Timout resolved " + ID);
+								}
+								isTimedOut = false;
+								Number[] up = packet.parse(message);
+								for (int j = 0; j < packet.getUpstream().length; j++) {
+									packet.getUpstream()[j] = up[j];
+								}
+								break;// pop out of the retry loop
+								// System.out.println("Took "+(System.currentTimeMillis()-start));
+							} else {
+								isTimedOut = true;
+							}
+						} else {
+							isTimedOut = true;
+						}
+					}
+					ArrayList<Runnable> toRem = timeoutsToRemove.get(packet.idOfCommand);
+					if (toRem != null) {
+						if (toRem.size() > 0) {
+							for (Runnable e : timeoutsToRemove.get(packet.idOfCommand)) {
+								timeouts.get(packet.idOfCommand).remove(e);
+							}
+							toRem.clear();
+						}
+						if (isTimedOut) {
+							for (Runnable e : timeouts.get(packet.idOfCommand)) {
+								if (e != null) {
+									try {
+										e.run();
+									} catch (Throwable t) {
+										t.printStackTrace(System.out);
+									}
+								}
+							}
+						}
+					}
+
+				}
+
 			} else {
 				// println "Simulation"
 				for (int j = 0; j < packet.getDownstream().length && j < packet.getUpstream().length; j++) {
@@ -378,7 +386,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 					}
 			}
 		} catch (Throwable t) {
-			// t.printStackTrace(System.out);
+			t.printStackTrace(System.out);
 		}
 		packet.done = true;
 	}
