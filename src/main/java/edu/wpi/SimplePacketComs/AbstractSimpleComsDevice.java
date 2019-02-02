@@ -310,7 +310,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 									}
 									isTimedOut = false;
 									Number[] up = packet.parse(message);
-									for (int j = 0; j < packet.getUpstream().length;j++) {
+									for (int j = 0; j < packet.getUpstream().length; j++) {
 										packet.getUpstream()[j] = up[j];
 									}
 									break;// pop out of the retry loop
@@ -357,15 +357,16 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 			}
 			// println "updaing "+upstream+" downstream "+downstream
-			if (!isTimedOut)
-				if (events.get(packet.idOfCommand) != null) {
-					if (toRemove.get(packet.idOfCommand) != null)
-						if (toRemove.get(packet.idOfCommand).size() > 0) {
-							for (Runnable e : toRemove.get(packet.idOfCommand)) {
-								events.get(packet.idOfCommand).remove(e);
-							}
-							toRemove.get(packet.idOfCommand).clear();
+
+			if (events.get(packet.idOfCommand) != null) {
+				if (toRemove.get(packet.idOfCommand) != null)
+					if (toRemove.get(packet.idOfCommand).size() > 0) {
+						for (Runnable e : toRemove.get(packet.idOfCommand)) {
+							events.get(packet.idOfCommand).remove(e);
 						}
+						toRemove.get(packet.idOfCommand).clear();
+					}
+				if (!isTimedOut)
 					for (Runnable e : events.get(packet.idOfCommand)) {
 						if (e != null) {
 							try {
@@ -375,7 +376,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 							}
 						}
 					}
-				}
+			}
 		} catch (Throwable t) {
 			// t.printStackTrace(System.out);
 		}
