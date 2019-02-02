@@ -8,6 +8,6 @@ repositories {
 maven { url 'https://oss.sonatype.org/content/repositories/staging/' }
 }
 dependencies {
-compile "com.neuronrobotics:SimplePacketComsJava:0.8.0"
+compile "com.neuronrobotics:SimplePacketComsJava:0.8.1"
 }
 ```
