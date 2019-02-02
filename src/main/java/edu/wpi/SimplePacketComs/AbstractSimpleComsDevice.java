@@ -453,26 +453,26 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 		return isTimedOut;
 	}
 
-	public  ArrayList<Runnable> getTimeoutsToRemove(int index) {
+	private  ArrayList<Runnable> getTimeoutsToRemove(int index) {
 		if(timeoutsToRemove.get(index)==null)
 			timeoutsToRemove.put(index,new ArrayList<Runnable> ());
 		return timeoutsToRemove.get(index);
 	}
 
-	public    ArrayList<Runnable> getToRemove(int index) {
+	private    ArrayList<Runnable> getToRemove(int index) {
 		if(toRemove.get(index)==null)
 			toRemove.put(index,new ArrayList<Runnable> ());
 		return toRemove.get(index);
 	}
 
 
-	public  ArrayList<Runnable> getEvents(int index) {
+	private  ArrayList<Runnable> getEvents(int index) {
 		if(events.get(index)==null)
 			events.put(index,new ArrayList<Runnable> ());
 		return events.get(index);
 	}
 
-	public  ArrayList<Runnable> getTimeouts(int index) {
+	private  ArrayList<Runnable> getTimeouts(int index) {
 		if(timeouts.get(index)==null)
 			timeouts.put(index,new ArrayList<Runnable> ());
 		return timeouts.get(index);
