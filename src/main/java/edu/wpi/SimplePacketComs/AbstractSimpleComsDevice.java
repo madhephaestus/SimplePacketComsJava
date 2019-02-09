@@ -11,7 +11,6 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 	private HashMap<Integer, ArrayList<Runnable>> events = new HashMap<>();
 	private HashMap<Integer, ArrayList<Runnable>> toRemove = new HashMap<>();
 
-
 	boolean connected = false;
 
 	ArrayList<PacketType> pollingQueue = new ArrayList<PacketType>();
@@ -66,7 +65,6 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 		getTimeouts(id).add(event);
 	}
-
 
 	public ArrayList<Integer> getIDs() {
 		ArrayList<Integer> ids = new ArrayList<>();
@@ -285,69 +283,48 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 	private void process(PacketType packet) {
 		packet.started = true;
+		long start = System.currentTimeMillis();
+		int myID = packet.idOfCommand;
+		int retry = 3;
+		setReadTimeout(20);
 		try {
 			if (!isVirtual()) {
-
-				byte[] message = packet.command();
-				// println "Writing: "+ message
-				int val = 0;
-				try {
-					val = write(message, message.length, 1);
-				} catch (Throwable t) {
-					t.printStackTrace(System.out);
-					disconnect();
-				}
-				if (val > 0) {
-					for (int i = 0; i < 3; i++) {// retry loop
-						int read = 0;
+				boolean resend = true;
+				for (int i = 0; i < retry; i++) {// retry loop
+					int val = PacketType.packetSize;
+					byte[] message=packet.command();;
+					if (resend) {					
 						try {
-							read = read(message, getReadTimeout());
+							val = write(message, message.length, 1);
+							resend = false;
 						} catch (Throwable t) {
 							t.printStackTrace(System.out);
 							disconnect();
 						}
-						if (read >= packet.getUpstream().length) {
+					}
+					if (val > 0) {
+						int read = 0;
+						try {
+							read = read(message, getReadTimeout()/retry);
+						} catch (Throwable t) {
+							t.printStackTrace(System.out);
+							disconnect();
+						}
+						
+						if (read >= PacketType.packetSize) {
 							// println "Parsing packet"
 							// println "read: "+ message
 							int ID = PacketType.getId(message);
-							if (ID == packet.idOfCommand) {
-								if (isTimedOut) {
-									System.out.println("Timout resolved " + ID);
-								}
-								isTimedOut = false;
+							
+							if (ID == myID) {
 								Number[] up = packet.parse(message);
 								for (int j = 0; j < packet.getUpstream().length; j++) {
 									packet.getUpstream()[j] = up[j];
 								}
 								break;// pop out of the retry loop
 								// System.out.println("Took "+(System.currentTimeMillis()-start));
-							} else {
-								isTimedOut = true;
-							}
-						} else {
-							isTimedOut = true;
+							} 
 						}
-					}
-					ArrayList<Runnable> toRem = getTimeoutsToRemove(packet.idOfCommand);
-		
-					if (toRem.size() > 0) {
-						for (Runnable e : toRem) {
-								getTimeouts(packet.idOfCommand).remove(e);
-						}
-						toRem.clear();
-					}
-					
-					if (isTimedOut) {
-
-							for (Runnable e : getTimeouts(packet.idOfCommand)) {
-								if (e != null) {
-									try {
-										e.run();
-									} catch (Throwable t) {
-										t.printStackTrace(System.out);
-									}
-								}
-							}
 					}
 
 				}
@@ -359,13 +336,23 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 				}
 
 			}
+			long commandDone = System.currentTimeMillis();
+
+			ArrayList<Runnable> toRem = getTimeoutsToRemove(packet.idOfCommand);
+
+			if (toRem.size() > 0) {
+				for (Runnable e : toRem) {
+					getTimeouts(packet.idOfCommand).remove(e);
+				}
+				toRem.clear();
+			}
 			if (getToRemove(packet.idOfCommand).size() > 0) {
 				for (Runnable e : getToRemove(packet.idOfCommand)) {
-						getEvents(packet.idOfCommand).remove(e);
+					getEvents(packet.idOfCommand).remove(e);
 				}
 				getToRemove(packet.idOfCommand).clear();
 			}
-			if (!isTimedOut)
+			if (!isTimedOut) {
 				for (Runnable e : getEvents(packet.idOfCommand)) {
 					if (e != null) {
 						try {
@@ -376,6 +363,29 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 						}
 					}
 				}
+			}
+			long eventDone = System.currentTimeMillis();
+			long totalDuration = eventDone - start;
+			long commandDuration = commandDone - start;
+			long eventDuration = eventDone - commandDone;
+			if (totalDuration > getReadTimeout()) {
+				isTimedOut = true;
+			}else
+				isTimedOut = false;
+			if (isTimedOut) {
+				System.out.println("Timeout on command " + myID + " took " + totalDuration
+						+ " should have taken " + getReadTimeout() + " command took " + commandDuration
+						+ " event handlers took " + eventDuration);
+				for (Runnable e : getTimeouts(packet.idOfCommand)) {
+					if (e != null) {
+						try {
+							e.run();
+						} catch (Throwable t) {
+							t.printStackTrace(System.out);
+						}
+					}
+				}
+			}
 
 		} catch (Throwable t) {
 			t.printStackTrace(System.out);
@@ -406,8 +416,15 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 						for (int i = 0; i < pollingQueue.size(); i++) {
 							PacketType pollingPacket = pollingQueue.get(i);
-							if (pollingPacket.sendOk())
+							if (pollingPacket.sendOk()) {
+								long start = System.currentTimeMillis();
 								process(pollingPacket);
+								long end = System.currentTimeMillis();
+								long took = (end - start);
+								// if(took >getReadTimeout())
+								// System.out.println("Loop took "+(end-start)+" on ID
+								// "+pollingPacket.idOfCommand);
+							}
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -443,6 +460,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 	public void setReadTimeout(int readTimeout) {
 		this.readTimeout = readTimeout;
+		//new RuntimeException(" Setting timeout to " + readTimeout).printStackTrace();
 	}
 
 	public String getName() {
@@ -457,32 +475,28 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 		return isTimedOut;
 	}
 
-	private  ArrayList<Runnable> getTimeoutsToRemove(int index) {
-		if(timeoutsToRemove.get(index)==null)
-			timeoutsToRemove.put(index,new ArrayList<Runnable> ());
+	private ArrayList<Runnable> getTimeoutsToRemove(int index) {
+		if (timeoutsToRemove.get(index) == null)
+			timeoutsToRemove.put(index, new ArrayList<Runnable>());
 		return timeoutsToRemove.get(index);
 	}
 
-	private    ArrayList<Runnable> getToRemove(int index) {
-		if(toRemove.get(index)==null)
-			toRemove.put(index,new ArrayList<Runnable> ());
+	private ArrayList<Runnable> getToRemove(int index) {
+		if (toRemove.get(index) == null)
+			toRemove.put(index, new ArrayList<Runnable>());
 		return toRemove.get(index);
 	}
 
-
-	private  ArrayList<Runnable> getEvents(int index) {
-		if(events.get(index)==null)
-			events.put(index,new ArrayList<Runnable> ());
+	private ArrayList<Runnable> getEvents(int index) {
+		if (events.get(index) == null)
+			events.put(index, new ArrayList<Runnable>());
 		return events.get(index);
 	}
 
-	private  ArrayList<Runnable> getTimeouts(int index) {
-		if(timeouts.get(index)==null)
-			timeouts.put(index,new ArrayList<Runnable> ());
+	private ArrayList<Runnable> getTimeouts(int index) {
+		if (timeouts.get(index) == null)
+			timeouts.put(index, new ArrayList<Runnable>());
 		return timeouts.get(index);
 	}
-
-
-
 
 }
