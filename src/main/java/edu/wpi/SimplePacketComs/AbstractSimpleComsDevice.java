@@ -50,7 +50,10 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 		getToRemove(id).add(event);
 	}
+	public void removeAllEvents(Integer id) {
 
+		getToRemove(id).addAll(getEvents(id));
+	}
 	public void addEvent(Integer id, Runnable event) {
 
 		getEvents(id).add(event);
@@ -60,7 +63,10 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 		getTimeoutsToRemove(id).add(event);
 	}
+	public void removeAllTimeouts(Integer id) {
 
+		getTimeoutsToRemove(id).addAll(getTimeouts(id));
+	}
 	public void addTimeout(Integer id, Runnable event) {
 
 		getTimeouts(id).add(event);
