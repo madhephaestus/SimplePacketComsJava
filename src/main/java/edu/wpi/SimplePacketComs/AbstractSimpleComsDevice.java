@@ -292,7 +292,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 		long start = System.currentTimeMillis();
 		int myID = packet.idOfCommand;
 		int retry = 3;
-		setReadTimeout(20);
+		//setReadTimeout(20);
 		try {
 			if (!isVirtual()) {
 				boolean resend = true;
@@ -379,9 +379,9 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 			}else
 				isTimedOut = false;
 			if (isTimedOut) {
-				System.out.println("Timeout on command " + myID + " took " + totalDuration
-						+ " should have taken " + getReadTimeout() + " command took " + commandDuration
-						+ " event handlers took " + eventDuration);
+//				System.out.println("Timeout on command " + myID + " took " + totalDuration
+//						+ " should have taken " + getReadTimeout() + " command took " + commandDuration
+//						+ " event handlers took " + eventDuration);
 				for (Runnable e : getTimeouts(packet.idOfCommand)) {
 					if (e != null) {
 						try {
