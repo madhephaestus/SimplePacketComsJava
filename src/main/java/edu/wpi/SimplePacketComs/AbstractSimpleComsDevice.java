@@ -399,6 +399,8 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 	}
 
 	public boolean connect() {
+		if(connected)
+			return true;
 		if (connectDeviceImp()) {
 			setVirtual(false);
 		} else {
