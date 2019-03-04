@@ -358,6 +358,15 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 				}
 				getToRemove(packet.idOfCommand).clear();
 			}
+
+			long eventDone = System.currentTimeMillis();
+			long totalDuration = eventDone - start;
+			long commandDuration = commandDone - start;
+			long eventDuration = eventDone - commandDone;
+			if (totalDuration > getReadTimeout()) {
+				isTimedOut = true;
+			}else
+				isTimedOut = false;
 			if (!isTimedOut) {
 				for (Runnable e : getEvents(packet.idOfCommand)) {
 					if (e != null) {
@@ -370,18 +379,10 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 					}
 				}
 			}
-			long eventDone = System.currentTimeMillis();
-			long totalDuration = eventDone - start;
-			long commandDuration = commandDone - start;
-			long eventDuration = eventDone - commandDone;
-			if (totalDuration > getReadTimeout()) {
-				isTimedOut = true;
-			}else
-				isTimedOut = false;
 			if (isTimedOut) {
-//				System.out.println("Timeout on command " + myID + " took " + totalDuration
-//						+ " should have taken " + getReadTimeout() + " command took " + commandDuration
-//						+ " event handlers took " + eventDuration);
+				System.out.println("Timeout on command " + myID + " took " + totalDuration
+						+ " should have taken " + getReadTimeout() + " command took " + commandDuration
+						+ " event handlers took " + eventDuration);
 				for (Runnable e : getTimeouts(packet.idOfCommand)) {
 					if (e != null) {
 						try {
