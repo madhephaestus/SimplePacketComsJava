@@ -17,15 +17,8 @@ import edu.wpi.SimplePacketComs.PacketType;
 public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 	private static final byte[] BROADCAST = new byte[] { (byte) 255, (byte) 255, (byte) 255, (byte) 255 };
 	public static final int PACKET_SIZE = 64;
-	private InetAddress address = null;
-	private static InetAddress broadcast=null;
-	private static final HashSet<InetAddress> addrs = new HashSet<>();
-	private static final HashMap<InetAddress, String> names = new HashMap<>();
-	private DatagramSocket udpSock;
-	private byte[] receiveData = new byte[PACKET_SIZE];
 	private static final int port = 1865;
-	private DatagramPacket receivePacket = new DatagramPacket(receiveData, PACKET_SIZE);
-	private boolean listening = false;
+	private static InetAddress broadcast=null;
 	static {
 		try {
 			broadcast = InetAddress.getByAddress(BROADCAST);
@@ -34,6 +27,16 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 			e.printStackTrace();
 		}
 	}
+	
+	private InetAddress address = null;
+	private final HashSet<InetAddress> addrs = new HashSet<>();
+	private static final HashMap<InetAddress, String> names = new HashMap<>();
+	private DatagramSocket udpSock;
+	private byte[] receiveData = new byte[PACKET_SIZE];
+	
+	private DatagramPacket receivePacket = new DatagramPacket(receiveData, PACKET_SIZE);
+	private boolean listening = false;
+
 	public UDPSimplePacketComs() {
 		// this.address = address;
 		listening = true;
@@ -50,7 +53,6 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 
 	public static HashSet<InetAddress> getAllAddresses(String name) throws Exception {
 		
-		addrs.clear();
 		UDPSimplePacketComs pinger = new UDPSimplePacketComs(broadcast);
 		pinger.connect();
 		BytePacketType namePacket = new BytePacketType(1776, PACKET_SIZE);
@@ -70,7 +72,7 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 			Thread.sleep(2);
 		}
 		pinger.disconnect();
-		return addrs;
+		return pinger.getAddrs();
 	}
 
 	@Override
@@ -99,9 +101,9 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 		}
 		InetAddress tmp = receivePacket.getAddress();
 		if (address.equals(broadcast)) {
-			if (!addrs.contains(tmp)) {
+			if (!getAddrs().contains(tmp)) {
 				if (PacketType.getId(data) == 1776)
-					addrs.add(tmp);// add new addresses only on response to a name request
+					getAddrs().add(tmp);// add new addresses only on response to a name request
 			}
 		}
 		if (names.get(tmp) == null) {
@@ -164,6 +166,10 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 	@Override
 	public void setName(String name) {
 		// this is a value read from the device
+	}
+
+	public HashSet<InetAddress> getAddrs() {
+		return addrs;
 	}
 
 }
