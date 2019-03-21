@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -17,7 +18,7 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 	private static final byte[] BROADCAST = new byte[] { (byte) 255, (byte) 255, (byte) 255, (byte) 255 };
 	public static final int PACKET_SIZE = 64;
 	private InetAddress address = null;
-	private static InetAddress broadcast;
+	private static InetAddress broadcast=null;
 	private static final HashSet<InetAddress> addrs = new HashSet<>();
 	private static final HashMap<InetAddress, String> names = new HashMap<>();
 	private DatagramSocket udpSock;
@@ -25,7 +26,14 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 	private static final int port = 1865;
 	private DatagramPacket receivePacket = new DatagramPacket(receiveData, PACKET_SIZE);
 	private boolean listening = false;
-
+	static {
+		try {
+			broadcast = InetAddress.getByAddress(BROADCAST);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	public UDPSimplePacketComs() {
 		// this.address = address;
 		listening = true;
@@ -41,7 +49,7 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 	}
 
 	public static HashSet<InetAddress> getAllAddresses(String name) throws Exception {
-		broadcast = InetAddress.getByAddress(BROADCAST);
+		
 		addrs.clear();
 		UDPSimplePacketComs pinger = new UDPSimplePacketComs(broadcast);
 		pinger.connect();

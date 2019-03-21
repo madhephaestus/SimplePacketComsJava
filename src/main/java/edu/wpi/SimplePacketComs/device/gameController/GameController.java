@@ -36,7 +36,6 @@ public class GameController extends UdpDevice{
 		for (InetAddress add : addresses) {
 			System.out.println("Got " + add.getHostAddress());
 			GameController e = new GameController(add);
-			e.connect();
 			robots.add(e);
 		}
 		return robots;
