@@ -90,11 +90,13 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 			message[i] = data[i];
 		}
 		InetAddress tmp = receivePacket.getAddress();
-		if (!addrs.contains(tmp)) {
-			if (PacketType.getId(data) == 1776) 
-				addrs.add(tmp);// add new addresses only on response to a name request
+		if (address.equals(broadcast)) {
+			if (!addrs.contains(tmp)) {
+				if (PacketType.getId(data) == 1776)
+					addrs.add(tmp);// add new addresses only on response to a name request
+			}
 		}
-		if(names.get(tmp)==null) {
+		if (names.get(tmp) == null) {
 			if (PacketType.getId(data) == 1776) {
 				byte[] namedata = new byte[data.length - 4];
 				for (int i = 0; i < namedata.length; i++) {
