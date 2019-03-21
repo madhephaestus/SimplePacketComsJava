@@ -14,14 +14,19 @@ public class GameController extends UdpDevice{
 	private PacketType gamestate = new BytePacketType(1970, 64);
 	private final byte[] status = new byte[60];
 	private final byte[] data = new byte[20];
-
+	private final int[] dataI = new int[20];
 	private GameController(InetAddress add) throws Exception {
 		super(add);
 		addPollingPacket(gamestate);
 		addEvent(gamestate.idOfCommand, new Runnable() {
 			@Override
 			public void run() {
-				readBytes(gamestate.idOfCommand, getData());
+				readBytes(gamestate.idOfCommand, data);
+				for(int i=0;i<data.length-1;i++) {
+					dataI[i]=data[i+1];
+					if(dataI[i]<0)
+						dataI[i]+=256;
+				}
 				writeBytes(gamestate.idOfCommand, getStatus());
 			}
 		});
@@ -46,8 +51,8 @@ public class GameController extends UdpDevice{
 	public byte[] getStatus() {
 		return status;
 	}
-	public byte[] getData() {
-		return data;
+	public int[] getData() {
+		return dataI;
 	}
 	public byte getControllerIndex() {
 		return data[0];
