@@ -11,23 +11,26 @@ import java.util.HashSet;
 
 import edu.wpi.SimplePacketComs.AbstractSimpleComsDevice;
 import edu.wpi.SimplePacketComs.BytePacketType;
+import edu.wpi.SimplePacketComs.PacketType;
 
 public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 	private static final byte[] BROADCAST = new byte[] { (byte) 255, (byte) 255, (byte) 255, (byte) 255 };
 	public static final int PACKET_SIZE = 64;
-	private InetAddress address=null;
+	private InetAddress address = null;
 	private static InetAddress broadcast;
 	private static final HashSet<InetAddress> addrs = new HashSet<>();
-	private static final HashMap<InetAddress,String> names=new HashMap<>();
+	private static final HashMap<InetAddress, String> names = new HashMap<>();
 	private DatagramSocket udpSock;
 	private byte[] receiveData = new byte[PACKET_SIZE];
 	private static final int port = 1865;
 	private DatagramPacket receivePacket = new DatagramPacket(receiveData, PACKET_SIZE);
 	private boolean listening = false;
+
 	public UDPSimplePacketComs() {
-		//this.address = address;
+		// this.address = address;
 		listening = true;
 	}
+
 	public UDPSimplePacketComs(InetAddress address) throws Exception {
 		this.address = address;
 		listening = false;
@@ -47,11 +50,11 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 			byte[] bytes = name.getBytes();
 			for (int i = 0; i < namePacket.getDownstream().length && i < name.length(); i++)
 				namePacket.getDownstream()[i] = bytes[i];
-		}else {
-			
-				namePacket.getDownstream()[0] = new Byte((byte)'*');
+		} else {
+
+			namePacket.getDownstream()[0] = new Byte((byte) '*');
 		}
-		
+
 		byte[] message = namePacket.command();
 		pinger.write(message, message.length, 1000);
 		for (int i = 0; i < 100; i++) {
@@ -80,23 +83,29 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 			ex.printStackTrace();
 			return 0;
 		}
-		
+
 		int len = receivePacket.getLength();
 		byte[] data = receivePacket.getData();
 		for (int i = 0; i < len; i++) {
 			message[i] = data[i];
 		}
-		if(!addrs.contains(receivePacket.getAddress())) {
-			addrs.add(receivePacket.getAddress());
-			byte[] namedata=new byte[data.length-4];
-			for (int i = 0; i < namedata.length; i++) {
-				namedata[i] = data[i+4];
-			}
-			String name = new String(namedata).trim();
-			names.put(receivePacket.getAddress(), name);
+		InetAddress tmp = receivePacket.getAddress();
+		if (!addrs.contains(tmp)) {
+			if (PacketType.getId(data) == 1776) 
+				addrs.add(tmp);// add new addresses only on response to a name request
 		}
-		if(address==null) {
-			address=receivePacket.getAddress();
+		if(names.get(tmp)==null) {
+			if (PacketType.getId(data) == 1776) {
+				byte[] namedata = new byte[data.length - 4];
+				for (int i = 0; i < namedata.length; i++) {
+					namedata[i] = data[i + 4];
+				}
+				String name = new String(namedata).trim();
+				names.put(tmp, name);
+			}
+		}
+		if (address == null) {
+			address = tmp;
 		}
 		return len;
 	}
@@ -125,7 +134,7 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 	@Override
 	public boolean connectDeviceImp() {
 		try {
-			if(listening)
+			if (listening)
 				udpSock = new DatagramSocket(port);
 			else
 				udpSock = new DatagramSocket();
@@ -136,10 +145,12 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 		}
 		return true;
 	}
+
 	@Override
 	public String getName() {
 		return names.get(address);
 	}
+
 	@Override
 	public void setName(String name) {
 		// this is a value read from the device
