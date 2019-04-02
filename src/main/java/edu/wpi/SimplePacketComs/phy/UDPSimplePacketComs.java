@@ -21,6 +21,7 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 	private static InetAddress broadcast=null;
 	static {
 		try {
+			
 			broadcast = InetAddress.getByAddress(BROADCAST);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
@@ -50,7 +51,9 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 	public static HashSet<InetAddress> getAllAddresses() throws Exception {
 		return getAllAddresses(null);
 	}
-
+	public static InetAddress getByName(String name) throws Exception {
+		return UDPSimplePacketComs.getAllAddresses(name).iterator().next();
+	}
 	public static HashSet<InetAddress> getAllAddresses(String name) throws Exception {
 		
 		UDPSimplePacketComs pinger = new UDPSimplePacketComs(broadcast);

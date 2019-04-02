@@ -9,3 +9,4 @@ bin/
 .project
 
 /gradle.properties
+/CSGdatabase.json
