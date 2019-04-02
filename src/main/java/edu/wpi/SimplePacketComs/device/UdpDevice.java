@@ -10,7 +10,9 @@ public abstract class UdpDevice extends UDPSimplePacketComs  implements Device{
 	private PacketType getName = new BytePacketType(1776, 64);
 	private InetAddress address;
 	private byte[] name = new byte[60];
-
+	public UdpDevice(String name ) throws Exception {
+		this(getByName( name));
+	}
 	public 	UdpDevice(InetAddress add) throws Exception {
 		super(add);
 		this.address=add;

@@ -47,7 +47,9 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 		this.address = address;
 		listening = false;
 	}
-
+	public UDPSimplePacketComs(String name ) throws Exception {
+		this(getByName( name));
+	}
 	public static HashSet<InetAddress> getAllAddresses() throws Exception {
 		return getAllAddresses(null);
 	}
