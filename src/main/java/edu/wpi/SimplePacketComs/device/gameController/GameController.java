@@ -17,6 +17,9 @@ public class GameController extends UdpDevice{
 	private final int[] dataI = new int[20];
 	private GameController(InetAddress add) throws Exception {
 		super(add);
+		setup();
+	}
+	private void setup() throws InterruptedException {
 		addPollingPacket(gamestate);
 		addEvent(gamestate.idOfCommand, new Runnable() {
 			@Override
@@ -30,6 +33,17 @@ public class GameController extends UdpDevice{
 				writeBytes(gamestate.idOfCommand, getStatus());
 			}
 		});
+		connect();
+		int i=0;
+		while(getName().getBytes().length==0 && i++<10){
+			System.out.println("Waiting for device name...");
+			Thread.sleep(100);// wait for the name packet to be sent
+			//String n = control.getName();
+		}
+	}
+	public GameController(String string) throws Exception {
+		super(string);
+		setup();
 	}
 	public static List<GameController> get(String name) throws Exception {
 		HashSet<InetAddress> addresses = UDPSimplePacketComs.getAllAddresses(name);

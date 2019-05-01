@@ -291,6 +291,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 		packet.started = true;
 		long start = System.currentTimeMillis();
 		int myID = packet.idOfCommand;
+
 		int retry = 3;
 		//setReadTimeout(20);
 		try {
