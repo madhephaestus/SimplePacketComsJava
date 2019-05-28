@@ -50,10 +50,12 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 		getToRemove(id).add(event);
 	}
+
 	public void removeAllEvents(Integer id) {
 
 		getToRemove(id).addAll(getEvents(id));
 	}
+
 	public void addEvent(Integer id, Runnable event) {
 
 		getEvents(id).add(event);
@@ -63,10 +65,12 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 		getTimeoutsToRemove(id).add(event);
 	}
+
 	public void removeAllTimeouts(Integer id) {
 
 		getTimeoutsToRemove(id).addAll(getTimeouts(id));
 	}
+
 	public void addTimeout(Integer id, Runnable event) {
 
 		getTimeouts(id).add(event);
@@ -293,14 +297,15 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 		int myID = packet.idOfCommand;
 
 		int retry = 3;
-		//setReadTimeout(20);
+		// setReadTimeout(20);
 		try {
 			if (!isVirtual()) {
 				boolean resend = true;
 				for (int i = 0; i < retry; i++) {// retry loop
 					int val = PacketType.packetSize;
-					byte[] message=packet.command();;
-					if (resend) {					
+					byte[] message = packet.command();
+					;
+					if (resend) {
 						try {
 							val = write(message, message.length, 1);
 							resend = false;
@@ -312,17 +317,17 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 					if (val > 0) {
 						int read = 0;
 						try {
-							read = read(message, getReadTimeout()/retry);
+							read = read(message, getReadTimeout() / retry);
 						} catch (Throwable t) {
 							t.printStackTrace(System.out);
 							disconnect();
 						}
-						
+
 						if (read >= PacketType.packetSize) {
 							// println "Parsing packet"
 							// println "read: "+ message
 							int ID = PacketType.getId(message);
-							
+
 							if (ID == myID) {
 								Number[] up = packet.parse(message);
 								for (int j = 0; j < packet.getUpstream().length; j++) {
@@ -330,7 +335,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 								}
 								break;// pop out of the retry loop
 								// System.out.println("Took "+(System.currentTimeMillis()-start));
-							} 
+							}
 						}
 					}
 
@@ -362,7 +367,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 			long commandDuration = commandDone - start;
 			if (commandDuration > getReadTimeout()) {
 				isTimedOut = true;
-			}else
+			} else
 				isTimedOut = false;
 			if (!isTimedOut) {
 				for (Runnable e : getEvents(packet.idOfCommand)) {
@@ -382,13 +387,13 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 			long eventDuration = eventDone - commandDone;
 			if (totalDuration > getReadTimeout()) {
 				isTimedOut = true;
-			}else
+			} else
 				isTimedOut = false;
-	
+
 			if (isTimedOut) {
-				System.out.println("Timeout on command " + myID + " took " + totalDuration
-						+ " should have taken " + getReadTimeout() + " command took " + commandDuration
-						+ " event handlers took " + eventDuration);
+				System.out.println("Timeout on command " + myID + " took " + totalDuration + " should have taken "
+						+ getReadTimeout() + " command took " + commandDuration + " event handlers took "
+						+ eventDuration);
 				for (Runnable e : getTimeouts(packet.idOfCommand)) {
 					if (e != null) {
 						try {
@@ -412,14 +417,15 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 	}
 
 	public boolean connect() {
-		if(connected)
+		if (connected)
 			return true;
-		if (connectDeviceImp()) {
-			setVirtual(false);
-		} else {
-			setVirtual(true);
+		if (!isVirtual()) {
+			if (connectDeviceImp()) {
+				setVirtual(false);
+			} else {
+				setVirtual(true);
+			}
 		}
-
 		connected = true;
 		new Thread() {
 			public void run() {
@@ -475,7 +481,7 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 
 	public void setReadTimeout(int readTimeout) {
 		this.readTimeout = readTimeout;
-		//new RuntimeException(" Setting timeout to " + readTimeout).printStackTrace();
+		// new RuntimeException(" Setting timeout to " + readTimeout).printStackTrace();
 	}
 
 	public String getName() {
