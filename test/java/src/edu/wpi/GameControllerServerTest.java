@@ -23,7 +23,7 @@ public class GameControllerServerTest {
 
 	@Test
 	public void test() throws Exception {
-		for(int i=0;i<100000;i++) {
+		for(int i=0;i<1000;i++) {
 			Thread.sleep(10);
 			//System.out.println(System.currentTimeMillis());
 		}

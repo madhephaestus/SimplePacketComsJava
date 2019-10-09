@@ -22,6 +22,7 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 	private DatagramSocket udpSock;
 	private byte[] receiveData = new byte[PACKET_SIZE];
 	private static final int port = 1865;
+	private int recivePort =0;
 	private DatagramPacket receivePacket = new DatagramPacket(receiveData, PACKET_SIZE);
 	private boolean listening = false;
 	public UDPSimplePacketComs() {
@@ -73,7 +74,9 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 		} // Timeout the socket after 1 ms
 		try {
 			udpSock.receive(receivePacket);
-
+			if(listening) {
+				recivePort = receivePacket.getPort();
+			}
 		} catch (SocketTimeoutException ste) {
 			return 0;
 		} catch (Exception ex) {
@@ -104,7 +107,7 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 	@Override
 	public int write(byte[] message, int length, int howLongToWaitBeforeTimeout) {
 
-		DatagramPacket sendPacket = new DatagramPacket(message, length, address, port);
+		DatagramPacket sendPacket = new DatagramPacket(message, length, address, listening?recivePort:port);
 		// Log.info("Sending UDP packet: "+sendPacket);
 		try {
 			udpSock.send(sendPacket);
