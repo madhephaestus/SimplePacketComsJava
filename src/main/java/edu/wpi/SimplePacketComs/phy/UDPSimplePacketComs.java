@@ -57,7 +57,15 @@ public class UDPSimplePacketComs extends AbstractSimpleComsDevice {
 		pinger.write(message, message.length, 1000);
 		for (int i = 0; i < 100; i++) {
 			pinger.read(message, 2);// Allow all possible packets to be processed
-			Thread.sleep(2);
+			Thread.sleep(20);
+		}
+		if(addrs.size()==0) {
+			message = namePacket.command();
+			pinger.write(message, message.length, 1000);
+			for (int i = 0; i < 100; i++) {
+				pinger.read(message, 2);// Allow all possible packets to be processed
+				Thread.sleep(20);
+			}
 		}
 		pinger.disconnect();
 		return addrs;
