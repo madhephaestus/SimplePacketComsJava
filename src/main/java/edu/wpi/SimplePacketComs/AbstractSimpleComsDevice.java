@@ -359,7 +359,9 @@ public abstract class AbstractSimpleComsDevice implements Device, IPhysicalLayer
 				getToRemove(packet.idOfCommand).clear();
 			}
 			if (!isTimedOut) {
-				for (Runnable e : getEvents(packet.idOfCommand)) {
+				ArrayList<Runnable> events2 = getEvents(packet.idOfCommand);
+				for (int i = 0; i < events2.size(); i++) {
+					Runnable e = events2.get(i);
 					if (e != null) {
 						try {
 							e.run();
